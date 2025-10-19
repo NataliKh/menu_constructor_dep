@@ -234,14 +234,12 @@ const TemplatesPage: React.FC = () => {
     if (!dialog || dialog.type !== "delete") return;
     const target = dialog.name;
     setIsProcessing(true);
-    let skipSync = false;
     try {
       await deleteOne(target);
     } catch (error) {
       const status = (error as ApiError)?.status;
       if (status === 401 || status === 403) {
         setSyncDisabled(true);
-        skipSync = true;
       }
     } finally {
       let fallbackName: string | null = null;

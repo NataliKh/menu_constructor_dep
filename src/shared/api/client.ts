@@ -2,7 +2,8 @@ export interface ApiError extends Error {
   status?: number;
 }
 
-const baseUrl = (import.meta as any).env?.VITE_API_URL || ""; // e.g. http://localhost:3000
+const rawBaseUrl = (import.meta as any).env?.VITE_API_URL;
+const baseUrl = typeof rawBaseUrl === "string" ? rawBaseUrl.replace(/\/$/, "") : ""; // e.g. http://localhost:3000
 let authToken: string | null = null;
 let unauthorizedHandler: ((status: number) => void) | null = null;
 
@@ -25,8 +26,19 @@ export function setUnauthorizedHandler(handler: ((status: number) => void) | nul
 // init from localStorage
 try { authToken = localStorage.getItem('auth-token'); } catch {}
 
+export function resolveApiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (!baseUrl) {
+    return normalizedPath;
+  }
+  return `${baseUrl}${normalizedPath}`;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(baseUrl + path, {
+  const resp = await fetch(resolveApiUrl(path), {
     headers: {
       "Content-Type": "application/json",
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),

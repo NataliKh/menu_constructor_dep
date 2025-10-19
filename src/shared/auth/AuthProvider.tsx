@@ -1,5 +1,5 @@
 import React from "react";
-import { api, getAuthToken, setAuthToken, setUnauthorizedHandler } from "../api/client";
+import { api, getAuthToken, resolveApiUrl, setAuthToken, setUnauthorizedHandler } from "../api/client";
 import { ToastContainerContext } from "../ui/ToastContainer";
 
 type Role = "user" | "admin";
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }, [user]);
 
   async function login(username: string, password: string) {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch(resolveApiUrl("/api/auth/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }
 
   async function register(username: string, password: string) {
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch(resolveApiUrl("/api/auth/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
