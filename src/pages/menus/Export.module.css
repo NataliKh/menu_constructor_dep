@@ -1,0 +1,4 @@
+._row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+._selectRow { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+._label { font-weight: 600; margin-bottom: 4px; }
+

@@ -1,0 +1,21 @@
+<svg width="256" height="256" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Конструктор меню — иконка</title>
+  <desc id="desc">Сетка из блоков, один блок смещён, курсор указывает на сборку</desc>
+
+  <!-- Базовые блоки -->
+  <rect x="3" y="3" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <rect x="10" y="3" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <!-- верхний правый — будет акцентным, поэтому пропускаем здесь -->
+  <rect x="3" y="10" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <rect x="10" y="10" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <rect x="17" y="10" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <rect x="3" y="17" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <rect x="10" y="17" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+  <rect x="17" y="17" width="4" height="4" rx="1.2" fill="none" stroke="#2563EB" stroke-width="1.5"></rect>
+
+  <!-- Акцентный "движимый" блок -->
+  <rect x="17" y="3" width="4" height="4" rx="1.2" fill="#2563EB" transform="rotate(-12 19 5)"></rect>
+
+  <!-- Указатель (намёк на drag&drop/конструктор) -->
+  <path d="M16.2 14.2 L22 22 L19.2 22 L19.2 23.8 L17.2 23.8 Z" fill="#22C55E"></path>
+</svg>

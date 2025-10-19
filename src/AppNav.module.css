@@ -1,0 +1,21 @@
+._nav {
+  padding: 12px;
+  border-bottom: 1px solid var(--md-primary-light);
+  margin-bottom: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+._logo {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+}
+._logo img {
+  display: block;
+  height: 100%;
+}
+._spacer { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+._link { text-decoration: none; }
+._logoutBtn { height: 28px; padding: 0 10px; }
+

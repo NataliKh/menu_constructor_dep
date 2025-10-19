@@ -1,0 +1,8 @@
+._title {
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  color: var(--md-accent, #222831);
+}
+._h1 { font-size: 26px; }
+._h2 { font-size: 20px; }
+

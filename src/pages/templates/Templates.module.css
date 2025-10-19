@@ -1,0 +1,6 @@
+._controls { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+._footerRow { display: flex; gap: 12px; align-items: center; margin-top: 12px; justify-content: space-between; flex-wrap: wrap; }
+._hint { display: block; color: #666; font-size: 12px; }
+._modalField { display: flex; flex-direction: column; gap: 6px; }
+._fieldLabel { font-size: 13px; color: #4b5563; }
+._error { color: #d14343; font-size: 12px; }

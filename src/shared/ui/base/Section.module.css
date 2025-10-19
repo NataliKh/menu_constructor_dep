@@ -1,0 +1,13 @@
+._section {
+  padding: 16px;
+  background: var(--md-surface, #fff);
+  border-radius: var(--md-radius, 12px);
+  box-shadow: var(--md-shadow, 0 4px 24px #0002, 0 1.5px 4px #0001);
+}
+
+._stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+

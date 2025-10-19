@@ -1,0 +1,14 @@
+<svg width="256" height="256" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- меняй цвет через CSS: color:#111 -->
+  <g fill="none" stroke="currentColor" stroke-width="1.6">
+    <rect x="3" y="3"  width="4" height="4" rx="1.2"/>
+    <rect x="10" y="3" width="4" height="4" rx="1.2"/>
+    <rect x="3" y="10" width="4" height="4" rx="1.2"/>
+    <rect x="10" y="10" width="4" height="4" rx="1.2"/>
+    <rect x="17" y="10" width="4" height="4" rx="1.2"/>
+    <rect x="3" y="17" width="4" height="4" rx="1.2"/>
+    <rect x="10" y="17" width="4" height="4" rx="1.2"/>
+    <rect x="17" y="17" width="4" height="4" rx="1.2"/>
+  </g>
+  <rect x="17" y="3" width="4" height="4" rx="1.2" fill="currentColor" transform="rotate(-12 19 5)"/>
+</svg>

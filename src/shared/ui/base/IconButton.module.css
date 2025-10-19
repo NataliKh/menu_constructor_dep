@@ -1,0 +1,29 @@
+﻿._iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--md-primary);
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border 0.15s ease;
+}
+._iconBtn:hover { background: var(--md-primary-light); }
+._iconBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+._danger { color: #b71c1c; }
+._danger:hover { background: #ffd6d6; }
+
+
+
+._iconBtn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+}

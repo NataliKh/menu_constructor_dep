@@ -1,0 +1,90 @@
+/* Material Design palette */
+:root {
+  --md-primary: #1976d2;
+  --md-primary-light: #e3f2fd;
+  --md-accent: #222831;
+  --md-bg: #f5f6fa;
+  --md-surface: #fff;
+  --md-error: #e53935;
+  --md-error-text: #fff;
+  --md-warning: #fff9c4;
+  --md-radius: 12px;
+  --md-shadow: 0 4px 24px #0002, 0 1.5px 4px #0001;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--md-bg);
+  color: var(--md-accent);
+  width: 100vw;
+}
+
+#root {
+  min-height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  transition: background 0.2s, box-shadow 0.2s, border 0.2s, color 0.2s;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  border-radius: var(--md-radius);
+  border: none;
+  background: var(--md-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 8px #1976d233;
+  padding: 0 24px;
+  height: 44px;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: var(--md-primary-light);
+  color: var(--md-primary);
+}
+
+input,
+textarea,
+select {
+  border-radius: var(--md-radius);
+  border: 1.5px solid #e0e0e0;
+  background: #fafbfc;
+  padding: 0 16px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border: 1.5px solid var(--md-primary);
+}
+
+ul {
+  padding-left: 20px;
+}
+
+img {
+  border-radius: 8px;
+}
+
+/* Remove old demo styles */
+.card,
+.read-the-docs,
+.logo {
+  display: none !important;
+}

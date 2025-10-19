@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: menu-constructor-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017" # optional, for local access
+    environment:
+      MONGO_INITDB_DATABASE: menu_constructor
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: menu-constructor-api
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/menu_constructor
+    depends_on:
+      - mongo
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo-data:
+

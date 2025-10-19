@@ -1,0 +1,53 @@
+:root {
+  --color-bg: #f5f6fa;
+  --color-surface: #fff;
+  --color-text: #222831;
+  --color-accent: #1976d2;
+  --color-accent-hover: #e3f2fd;
+  --color-button: #2196f3;
+  --color-button-hover: #e3f2fd;
+  --color-border: #e0e0e0;
+  --color-error: #e53935;
+  --color-success: #43a047;
+}
+.toast {
+  min-width: 220px;
+  max-width: 340px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px #0002, 0 1.5px 4px #0001;
+  padding: 14px 24px;
+  font-weight: 500;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  background: var(--color-accent);
+  color: #fff;
+}
+.toast.success {
+  background: var(--color-success);
+  color: #fff;
+}
+.toast.error {
+  background: var(--color-error);
+  color: #fff;
+}
+.toast.info {
+  background: var(--color-accent-hover);
+  color: var(--color-accent);
+}
+.icon {
+  font-size: 20px;
+}
+.message {
+  flex: 1;
+}
+.close {
+  font-size: 20px;
+  margin-left: 8px;
+  opacity: 0.5;
+}
