@@ -1,5 +1,5 @@
 import React from "react";
-import { api, getAuthToken, resolveApiUrl, setAuthToken, setUnauthorizedHandler } from "../api/client";
+import { api, getAuthToken, setAuthToken, setUnauthorizedHandler } from "../api/client";
 import { ToastContainerContext } from "../ui/ToastContainer";
 
 type Role = "user" | "admin";
@@ -12,6 +12,7 @@ interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isReady: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -31,6 +32,10 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       return null;
     }
   });
+  const [isReady, setIsReady] = React.useState<boolean>(() => {
+    // if we already have a user saved, we can treat auth as ready immediately
+    return Boolean(user) || !getAuthToken();
+  });
 
   React.useEffect(() => {
     if (user) localStorage.setItem(AUTH_KEY, JSON.stringify(user));
@@ -38,7 +43,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }, [user]);
 
   async function login(username: string, password: string) {
-    const res = await fetch(resolveApiUrl("/api/auth/login"), {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -55,7 +60,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }
 
   async function register(username: string, password: string) {
-    const res = await fetch(resolveApiUrl("/api/auth/register"), {
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -97,35 +102,50 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   React.useEffect(() => {
     let cancelled = false;
-    if (!getAuthToken()) {
+    const token = getAuthToken();
+    if (!token) {
+      setIsReady(true);
       return () => {
         cancelled = true;
       };
     }
+    // If we already have a user, we can consider auth ready without hitting the API
+    if (user) {
+      setIsReady(true);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setIsReady(false);
     (async () => {
       try {
         const res = await api.get<{ user: AuthUser }>("/api/auth/me");
         if (!cancelled) {
           setUser(res?.user ?? null);
         }
-      } catch {
-        if (!cancelled) {
+      } catch (err: any) {
+        // Only force logout on explicit auth failures; keep session if server is temporarily unavailable
+        if (!cancelled && err?.status === 401) {
           logout();
         }
+      } finally {
+        if (!cancelled) setIsReady(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [logout]);
+  }, [logout, user]);
 
   const value: AuthContextValue = React.useMemo(() => ({
     user,
     isAuthenticated: Boolean(user),
+    isReady,
     login,
     register,
     logout,
-  }), [user, logout]);
+  }), [user, isReady, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

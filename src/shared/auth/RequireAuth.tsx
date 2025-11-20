@@ -7,8 +7,12 @@ interface RequireAuthProps {
 }
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ roles }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isReady } = useAuth();
   const location = useLocation();
+
+  if (!isReady) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
@@ -22,4 +26,3 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ roles }) => {
 };
 
 export default RequireAuth;
-
