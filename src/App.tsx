@@ -14,6 +14,8 @@ import TemplatesPage from "./pages/templates";
 import { AuthProvider, useAuth } from "./shared/auth/AuthProvider";
 import RequireAuth from "./shared/auth/RequireAuth";
 import LoginPage from "./pages/login";
+import ForgotPasswordPage from "./pages/forgot-password";
+import ResetPasswordPage from "./pages/reset-password";
 import ForbiddenPage from "./pages/forbidden";
 import navStyles from "./AppNav.module.css";
 
@@ -39,6 +41,8 @@ const App: React.FC = () => {
               </Route>
               <Route path="/import" element={<ImportPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/forbidden" element={<ForbiddenPage />} />
               <Route path="*" element={<Navigate to="/menus" replace />} />
             </Routes>

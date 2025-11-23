@@ -4,3 +4,5 @@
 ._label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px; color: #444; }
 ._error { margin-top: 4px; color: #b71c1c; font-size: 12px; }
 ._common { margin: 8px 0; color: #b71c1c; font-size: 13px; }
+._link { color: #2c6ae2; text-decoration: none; font-size: 14px; }
+._link:hover { text-decoration: underline; }

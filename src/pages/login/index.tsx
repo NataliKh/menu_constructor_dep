@@ -4,6 +4,7 @@ import { useAuth } from "../../shared/auth/AuthProvider";
 import { Button, Input, Section, SectionTitle } from "../../shared/ui/base";
 import styles from "./Login.module.css";
 import { ToastContainerContext } from "../../shared/ui/ToastContainer";
+import { Link } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const { login, register } = useAuth();
@@ -67,6 +68,9 @@ const LoginPage: React.FC = () => {
           </Button>
         </div>
       </form>
+      <div style={{ marginTop: 12 }}>
+        <Link to="/forgot-password" className={styles._link}>Забыли пароль?</Link>
+      </div>
     </Section>
   );
 };

@@ -1,126 +1,79 @@
 import React from "react";
 import { Button, Select, TextArea, Section, SectionTitle, Input, Modal } from "../../shared/ui/base";
 import styles from "./Templates.module.css";
-import { useTemplatesServer } from "../../features/templates/useTemplatesServer";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import {
+  DEFAULT_TEMPLATE,
+  deleteTemplateLocal,
+  deleteTemplateRemote,
+  fetchTemplates,
+  markSynced,
+  normalizeTemplates,
+  renameTemplateLocal,
+  setSyncDisabled,
+  setTemplateValue,
+  upsertTemplate,
+  uploadTemplates,
+} from "../../features/templates/store/templatesSlice";
+import type { Template } from "../../features/templates/store/templatesSlice";
+import { ToastContainerContext } from "../../shared/ui/ToastContainer";
 import type { ApiError } from "../../shared/api/client";
-
-type Template = { name: string; value: string };
+import { useLoading } from "../../shared/loading/LoadingProvider";
 
 type DialogState =
   | { type: "save"; initialName: string }
   | { type: "rename"; initialName: string }
   | { type: "delete"; name: string };
 
-const DEFAULT_TEMPLATE = `<li class="<?= htmlspecialchars($item['className'] ?? '') ?>">
-  <a href="<?= htmlspecialchars($item['uri'] ?? '#') ?>">
-    <?= htmlspecialchars($item['text'] ?? '') ?>
-  </a>
-  <?php if (!empty($item['children'])): ?>
-    <ul>
-      <?= renderMenu($item['children']); ?>
-    </ul>
-  <?php endif; ?>
-</li>`;
-
-function normalizeTemplates(list: Template[]): Template[] {
-  const seen = new Set<string>();
-  let defaultTemplate: Template | null = null;
-  const others: Template[] = [];
-
-  list.forEach((item) => {
-    if (!item) return;
-    const name = typeof item.name === "string" ? item.name.trim() : "";
-    if (!name || seen.has(name)) return;
-    seen.add(name);
-    const value = typeof item.value === "string" ? item.value.trimEnd() : "";
-    if (name === "default") {
-      defaultTemplate = { name: "default", value: value || DEFAULT_TEMPLATE };
-    } else {
-      others.push({ name, value: value || DEFAULT_TEMPLATE });
-    }
-  });
-
-  return defaultTemplate
-    ? [defaultTemplate, ...others]
-    : [{ name: "default", value: DEFAULT_TEMPLATE }, ...others];
-}
-
-function templatesEqual(a: Template[], b: Template[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i += 1) {
-    if (a[i].name !== b[i].name) return false;
-    const left = (a[i].value || "").trimEnd();
-    const right = (b[i].value || "").trimEnd();
-    if (left !== right) return false;
-  }
-  return true;
-}
-
 const TemplatesPage: React.FC = () => {
-  const { uploadAll, fetchAll, deleteOne } = useTemplatesServer();
-  const [templates, setTemplates] = React.useState<Template[]>([{ name: "default", value: DEFAULT_TEMPLATE }]);
+  const dispatch = useAppDispatch();
+  const templates = useAppSelector((state) => state.templates.items as Template[]);
+  const hasLocalChanges = useAppSelector((state) => state.templates.hasLocalChanges);
+  const syncDisabled = useAppSelector((state) => state.templates.syncDisabled);
+  const status = useAppSelector((state) => state.templates.status);
   const [selected, setSelected] = React.useState<string>("default");
-  const [value, setValue] = React.useState(DEFAULT_TEMPLATE);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [syncDisabled, setSyncDisabled] = React.useState(true);
-  const [hasLocalChanges, setHasLocalChanges] = React.useState(false);
   const [dialog, setDialog] = React.useState<DialogState | null>(null);
   const [dialogName, setDialogName] = React.useState("");
   const [dialogError, setDialogError] = React.useState("");
   const [isProcessing, setIsProcessing] = React.useState(false);
+  const toast = React.useContext(ToastContainerContext);
+  const { withLoading } = useLoading();
 
-  const attemptSync = React.useCallback(async (payload: Template[]) => {
-    if (syncDisabled) return;
-    try {
-      await uploadAll(payload);
-      setHasLocalChanges(false);
-    } catch (error) {
-      const status = (error as ApiError)?.status;
-      if (status === 401 || status === 403) {
-        setSyncDisabled(true);
-      }
-      throw error;
-    }
-  }, [uploadAll, syncDisabled]);
+  const isLoading = status === "loading";
+  const selectedTemplate = templates.find((tpl) => tpl.name === selected);
+  const value = selectedTemplate?.value ?? DEFAULT_TEMPLATE;
 
-  React.useEffect(() => {
-    const current = templates.find((tpl) => tpl.name === selected);
-    setValue(current?.value ?? DEFAULT_TEMPLATE);
-  }, [templates, selected]);
+  const ensureSelection = React.useCallback(() => {
+    if (!templates.length) return;
+    setSelected((prev) => {
+      if (templates.some((tpl) => tpl.name === prev)) return prev;
+      const fallback = templates.find((tpl) => tpl.name === "default")?.name ?? templates[0]?.name ?? "default";
+      return fallback;
+    });
+  }, [templates]);
 
   React.useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
+    ensureSelection();
+  }, [ensureSelection]);
 
-    (async () => {
+  const handleFetchFromServer = React.useCallback(async () => {
+    await withLoading(async () => {
       try {
-        const remote = await fetchAll();
-        if (cancelled) return;
-        const rawList = Array.isArray(remote) ? (remote as Template[]) : [];
-        const normalized = normalizeTemplates(rawList);
-        setTemplates(normalized);
-        setSelected(normalized.some((tpl) => tpl.name === "default") ? "default" : normalized[0]?.name ?? "default");
-        setSyncDisabled(false);
-        setHasLocalChanges(false);
+        await dispatch(fetchTemplates()).unwrap();
+        dispatch(setSyncDisabled(false));
       } catch (error) {
-        const status = (error as ApiError)?.status;
-        if (!cancelled && (status === 401 || status === 403)) {
-          setSyncDisabled(true);
+        const statusCode = (error as ApiError)?.status;
+        if (statusCode === 401 || statusCode === 403) {
+          dispatch(setSyncDisabled(true));
         }
-        if (!cancelled) {
-          setTemplates([{ name: "default", value: DEFAULT_TEMPLATE }]);
-          setSelected("default");
-          setHasLocalChanges(false);
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
+        toast?.notify("Не удалось загрузить шаблоны", "error", 3500);
       }
-    })();
+    });
+  }, [dispatch, toast, withLoading]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchAll]);
+  React.useEffect(() => {
+    void handleFetchFromServer();
+  }, [handleFetchFromServer]);
 
   React.useEffect(() => {
     if (!dialog) {
@@ -136,18 +89,33 @@ const TemplatesPage: React.FC = () => {
 
   React.useEffect(() => {
     if (!hasLocalChanges || syncDisabled || isProcessing) return;
-    void attemptSync(templates).catch(() => {});
-  }, [templates, hasLocalChanges, syncDisabled, isProcessing, attemptSync]);
+    let cancelled = false;
+    setIsProcessing(true);
+
+    (async () => {
+      try {
+        await withLoading(async () => {
+          await dispatch(uploadTemplates(templates)).unwrap();
+        });
+        if (!cancelled) dispatch(markSynced());
+      } catch (error) {
+        const statusCode = (error as ApiError)?.status;
+        if (statusCode === 401 || statusCode === 403) {
+          dispatch(setSyncDisabled(true));
+        } else {
+          toast?.notify("Не удалось синхронизировать шаблоны", "error", 3500);
+        }
+      } finally {
+        if (!cancelled) setIsProcessing(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [templates, hasLocalChanges, syncDisabled, isProcessing, dispatch, withLoading, toast]);
 
   const handleValueChange = (next: string) => {
-    setValue(next);
-    setTemplates((prev) => {
-      const mapped = prev.map((tpl) => (tpl.name === selected ? { ...tpl, value: next } : tpl));
-      const normalized = normalizeTemplates(mapped);
-      if (templatesEqual(prev, normalized)) return prev;
-      setHasLocalChanges(true);
-      return normalized;
-    });
+    if (!selected) return;
+    dispatch(setTemplateValue({ name: selected, value: next }));
   };
 
   const openSave = () => {
@@ -174,7 +142,7 @@ const TemplatesPage: React.FC = () => {
   const ensureName = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) {
-      setDialogError("Введите название шаблона");
+      setDialogError("Название шаблона обязательно");
       return null;
     }
     return trimmed;
@@ -188,18 +156,7 @@ const TemplatesPage: React.FC = () => {
       setDialogError("Шаблон с таким именем уже существует");
       return;
     }
-    setTemplates((prev) => {
-      const idx = prev.findIndex((tpl) => tpl.name === trimmed);
-      const nextList = idx === -1
-        ? [...prev, { name: trimmed, value }]
-        : prev.map((tpl) => (tpl.name === trimmed ? { name: trimmed, value } : tpl));
-      const normalized = normalizeTemplates(nextList);
-      if (templatesEqual(prev, normalized)) {
-        return prev;
-      }
-      setHasLocalChanges(true);
-      return normalized;
-    });
+    dispatch(upsertTemplate({ name: trimmed, value }));
     setSelected(trimmed);
     closeDialog();
   };
@@ -217,15 +174,7 @@ const TemplatesPage: React.FC = () => {
       return;
     }
     const original = selected;
-    setTemplates((prev) => {
-      const nextList = prev.map((tpl) => (tpl.name === original ? { ...tpl, name: trimmed } : tpl));
-      const normalized = normalizeTemplates(nextList);
-      if (templatesEqual(prev, normalized)) {
-        return prev;
-      }
-      setHasLocalChanges(true);
-      return normalized;
-    });
+    dispatch(renameTemplateLocal({ from: original, to: trimmed }));
     setSelected(trimmed);
     closeDialog();
   };
@@ -234,53 +183,30 @@ const TemplatesPage: React.FC = () => {
     if (!dialog || dialog.type !== "delete") return;
     const target = dialog.name;
     setIsProcessing(true);
-    try {
-      await deleteOne(target);
-    } catch (error) {
-      const status = (error as ApiError)?.status;
-      if (status === 401 || status === 403) {
-        setSyncDisabled(true);
-      }
-    } finally {
-      let fallbackName: string | null = null;
-      setTemplates((prev) => {
-        const filtered = prev.filter((tpl) => tpl.name !== target);
-        const normalized = normalizeTemplates(filtered);
-        fallbackName = normalized.some((tpl) => tpl.name === "default")
-          ? "default"
-          : normalized[0]?.name ?? "default";
-        if (templatesEqual(prev, normalized)) {
-          return prev;
+    await withLoading(async () => {
+      let removed = false;
+      try {
+        await dispatch(deleteTemplateRemote(target)).unwrap();
+        removed = true;
+      } catch (error) {
+        const statusCode = (error as ApiError)?.status;
+        if (statusCode === 401 || statusCode === 403) {
+          dispatch(setSyncDisabled(true));
+          dispatch(deleteTemplateLocal(target));
+          removed = true;
+        } else {
+          toast?.notify("Не удалось удалить шаблон", "error", 3500);
         }
-        setHasLocalChanges(true);
-        return normalized;
-      });
-      if (fallbackName) {
-        setSelected((prevSelected) => (prevSelected === target ? fallbackName! : prevSelected));
+      } finally {
+        if (removed) {
+          const normalized = normalizeTemplates(templates.filter((tpl) => tpl.name !== target));
+          const fallbackName = normalized.find((tpl) => tpl.name === "default")?.name ?? normalized[0]?.name ?? "default";
+          setSelected((prevSelected) => (prevSelected === target ? fallbackName : prevSelected));
+        }
+        setDialog(null);
+        setIsProcessing(false);
       }
-      setIsProcessing(false);
-      setDialog(null);
-    }
-  };
-
-  const handleFetchFromServer = async () => {
-    setIsLoading(true);
-    try {
-      const remote = await fetchAll();
-      const rawList = Array.isArray(remote) ? (remote as Template[]) : [];
-      const normalized = normalizeTemplates(rawList);
-      setTemplates(normalized);
-      setSelected(normalized.some((tpl) => tpl.name === "default") ? "default" : normalized[0]?.name ?? "default");
-      setSyncDisabled(false);
-      setHasLocalChanges(false);
-    } catch (error) {
-      const status = (error as ApiError)?.status;
-      if (status === 401 || status === 403) {
-        setSyncDisabled(true);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const renderNameDialog = (title: string, onSubmit: () => void, submitLabel: string) => (
@@ -308,9 +234,15 @@ const TemplatesPage: React.FC = () => {
     </Modal>
   );
 
+  const syncHint = syncDisabled
+    ? "Автосинхронизация отключена (нет доступа). Можно продолжать правки локально и повторить попытку позже."
+    : hasLocalChanges
+      ? "Есть несохраненные изменения, отправим их на сервер автоматически."
+      : "Локальные данные синхронизированы с сервером.";
+
   return (
     <Section>
-      <SectionTitle level={1}>Шаблоны экспорта (PHP)</SectionTitle>
+      <SectionTitle level={1}>Шаблоны меню (PHP)</SectionTitle>
       <div className={styles._controls}>
         <Select value={selected} onChange={(e) => setSelected(e.target.value)} disabled={isLoading || isProcessing}>
           {templates.map((tpl) => (
@@ -325,15 +257,9 @@ const TemplatesPage: React.FC = () => {
       </div>
       <TextArea value={value} onChange={(e) => handleValueChange(e.target.value)} rows={10} disabled={isLoading || isProcessing} />
       <div className={styles._footerRow}>
-        <span className={styles._hint}>
-          {syncDisabled
-            ? "Нет доступа к серверу — шаблоны сохраняются только в этом браузере."
-            : hasLocalChanges
-              ? "Изменения ещё не отправлены на сервер."
-              : "Изменения автоматически отправлены на сервер."}
-        </span>
+        <span className={styles._hint}>{syncHint}</span>
         <Button type="button" onClick={handleFetchFromServer} variant="secondary" disabled={isLoading || isProcessing}>
-          Загрузить с сервера
+          Обновить с сервера
         </Button>
       </div>
       {dialog?.type === "save" &&
@@ -353,7 +279,7 @@ const TemplatesPage: React.FC = () => {
             </>
           )}
         >
-          <p>Шаблон «{dialog.name}» будет удалён. Эта операция необратима.</p>
+          <p>Шаблон «{dialog.name}» будет удален. Сохранить изменения нельзя отменить.</p>
         </Modal>
       )}
     </Section>
