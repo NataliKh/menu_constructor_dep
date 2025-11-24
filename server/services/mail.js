@@ -34,7 +34,7 @@ export async function sendResetEmail(to, token) {
     throw new Error('SMTP не настроен: заполните SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS');
   }
   const origin = APP_ORIGIN || 'http://localhost:5173';
-  const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
+  const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(token)}&username=${encodeURIComponent(to || '')}`;
 
   await transporter.sendMail({
     from: MAIL_FROM || SMTP_USER,
