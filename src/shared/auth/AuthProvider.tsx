@@ -43,37 +43,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }, [user]);
 
   async function login(username: string, password: string) {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    if (!res.ok) {
-      const details = data?.fieldErrors || undefined;
-      const msg = data?.message || "Не удалось выполнить вход";
-      throw { message: msg, fieldErrors: details } as any;
-    }
-    setAuthToken(data.token);
-    setUser(data.user);
+    const data = await api.post<{ token: string; user: AuthUser }>("/api/auth/login", { username, password });
+    setAuthToken(data?.token || null);
+    setUser(data?.user || null);
   }
 
   async function register(username: string, password: string) {
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-    if (!res.ok) {
-      const details = data?.fieldErrors || undefined;
-      const msg = data?.message || "Не удалось зарегистрироваться";
-      throw { message: msg, fieldErrors: details } as any;
-    }
-    setAuthToken(data.token);
-    setUser(data.user);
+    const data = await api.post<{ token: string; user: AuthUser }>("/api/auth/register", { username, password });
+    setAuthToken(data?.token || null);
+    setUser(data?.user || null);
   }
 
   const logout = React.useCallback(() => {
